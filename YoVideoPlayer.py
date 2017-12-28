@@ -2,9 +2,11 @@ from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
 from kivy.logger import Logger
 from Dialogs import LoadDialog, SaveDialog, LabelDialog
+from Video import DrawableVideo
 from kivy.uix.widget import Widget
 from copy import copy
 import cv2
+from kivy.properties import ObjectProperty, ListProperty
 
 
 from YoLabel import YoBBWidget, YoBBWidgetGroup
@@ -12,20 +14,21 @@ from YoLabel import YoBBWidget, YoBBWidgetGroup
 import os
 
 class YoVideoPlayer(BoxLayout):
+    add_bb = ObjectProperty(None)
+    bbs = ListProperty(None)
     def __init__(self, **kwargs):
         super(YoVideoPlayer, self).__init__(**kwargs)
         self.activeLabel = None
-        self.labelDropDown = None
-        self.labelGroup = {}
-        self.labelGroup['Undefined'] = YoBBWidgetGroup('Undefined')
         self.workingAreaPath = r'C:\Labeler'
         self.savedDataIndex = 0
+        self.videoSliderPressed = False
 
-    def VideoplayerTouchDown(self, touch):
+    def on_bbs(self, instance, value):
+        self.ids.videoplayer.bbs = self.bbs
+
+    def video_player_touch_down(self, touch):
         Logger.debug('video pressed')
         videoWidget = self.ids.videoplayer
-        if self.labelDropDown is not None:
-            return
         if 'pos' not in touch.profile:
             return
         else:
@@ -40,10 +43,12 @@ class YoVideoPlayer(BoxLayout):
                 self.activeLabel = YoBBWidget()
                 videoWidget.add_widget(self.activeLabel)
 
-    def VideoplayerMove(self, touch):
+    def video_player_move(self, touch):
         isLeftButton = False
+        if self.activeLabel is None:
+            return
         if 'pos' in touch.profile:
-            videoWidget = self.children[0].children[1]
+            videoWidget = self.ids.videoplayer
             Logger.debug('widget-' + str(self.size))
             Logger.debug('video-size:' + str(videoWidget.size) + ' pos:' + str(videoWidget.pos))
             Logger.debug('touch before: '+ str(touch.pos))
@@ -72,29 +77,35 @@ class YoVideoPlayer(BoxLayout):
                 self.currentLabelSize = (xMax-xMin, yMax-yMin)
                 self.activeLabel.update(self.currentLabelLeftTop, self.currentLabelSize)
 
-    def VideoplayerTouchUp(self, touch):
-        if self.activeLabel is not None and self.activeLabel.isUpdated:
-            videoWidget = self.children[0].children[1]
-            if self.activeLabel.is_legal_size() is False:
-                videoWidget.remove_widget(self.activeLabel)
-                self.activeLabel = None
-                return
-            else:
-                self.labelGroup['Undefined'].add_yobbwidget(self.activeLabel)
-
-                content = LabelDialog(assign_label=self.assign_label,
-                                      delete_label=self.delete_label,
-                                      add_label=self.add_label,
-                                      bb = self.activeLabel,
-                                      labels=self.labelGroup.keys(),
-                                      cancel=self.dismiss_popup
-                                      )
-                self.activePopup = Popup(title='Choose label to bounding box', content=content,
-                                            size_hint=(0.9, 0.9))
-                self.activePopup.open()
+    def video_player_touch_up(self, touch):
+        if self.activeLabel is not None:
+            videoWidget = self.ids.videoplayer
+            self.add_bb(self.activeLabel)
+            videoWidget.remove_widget(self.activeLabel)
         self.currentLabelLeftTop = None
         self.currentLabelPivot = None
         self.activeLabel = None
+
+    def video_position_changed(self, value):
+        if self.videoSliderPressed is False:
+            self.ids.videoSlider.value = value
+
+    def video_duration_changed(self, value):
+        self.ids.videoSlider.max = value
+
+    def video_slider_released(self, touch, value):
+        if self.videoSliderPressed:
+            self.ids.videoplayer.seek(value)
+            self.videoSliderPressed = False
+
+    def video_slider_pressed(self, touch):
+        if self.ids.videoSlider.disabled is True:
+            return
+        if 'pos' in touch.profile:
+            if self.ids.videoSlider.collide_point(touch.pos[0], touch.pos[1]) is False:
+                return
+        self.videoSliderPressed = True
+
 
     def LoadMovie(self):
         Logger.debug("Load Movie released")
@@ -107,6 +118,7 @@ class YoVideoPlayer(BoxLayout):
         fullPath = os.path.join(path, filename[0])
         self.ids.videoplayer.source = fullPath
         # self.ids.videoplayer.state = 'play'
+        self.ids.videoslider.disabled=False
         self.dismiss_popup()
 
     def dismiss_popup(self):
@@ -143,7 +155,7 @@ class YoVideoPlayer(BoxLayout):
 
     def clear_labels(self):
         Logger.debug('clear_labels pressed')
-        videoWidget = self.children[0].children[1]
+        videoWidget = self.ids.videoplayer
         for key in self.labelGroup.keys():
             while self.labelGroup[key].is_empty() is False:
                 label = self.labelGroup[key].get_next_bb()
@@ -155,7 +167,7 @@ class YoVideoPlayer(BoxLayout):
             if newLabel not in self.labelGroup.keys():
                 newGroup = YoBBWidgetGroup(newLabel)
                 self.labelGroup[newLabel] = newGroup
-                self.activePopup.content.update_labels(self.labelGroup.keys())
+                self.activePopup.content.labels = self.labelGroup.keys()
             else:
                 print(newLabel + 'is already defined')
 
@@ -169,13 +181,25 @@ class YoVideoPlayer(BoxLayout):
             self.dismiss_popup()
 
     def delete_label(self, labelName):
+        if labelName is 'Undefined':
+            return
         if labelName not in self.labelGroup.keys():
             return
         else:
-            videoWidget = self.children[0].children[1]
+            videoWidget = self.ids.videoplayer
             while self.labelGroup[labelName].is_empty() is False:
                 label = self.labelGroup[labelName].get_next_bb()
                 self.labelGroup[labelName].delete_yobbwidget(label)
                 videoWidget.remove_widget(label)
             self.labelGroup.pop(labelName)
             self.activePopup.content.update_labels(self.labelGroup.keys())
+
+    def delete_all_bb_of_label(self, labelName):
+        if labelName not in self.labelGroup.keys():
+            return
+        else:
+            videoWidget = self.ids.videoplayer
+            while self.labelGroup[labelName].is_empty() is False:
+                label = self.labelGroup[labelName].get_next_bb()
+                self.labelGroup[labelName].delete_yobbwidget(label)
+                videoWidget.remove_widget(label)

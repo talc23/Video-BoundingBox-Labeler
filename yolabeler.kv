@@ -1,68 +1,109 @@
 #:import VideoPlayer kivy.uix.videoplayer
 <YoVideoPlayer>
-    BoxLayout:
-        orientation:'vertical'
-        Video:
-            id: videoplayer
-            size_hint: (1,.9)
-            on_touch_down: root.VideoplayerTouchDown(args[1])
-            on_touch_move: root.VideoplayerMove(args[1])
-            on_touch_up: root.VideoplayerTouchUp(args[1])
-        StackLayout:
-            size_hint: (1,.1)
-            Button:
-                size_hint: (.1,1)
-                text:'Load Movie'
-                on_release: root.LoadMovie()
-#                Image:
-#                    source: './icons/if_media-eject_118785.png'
-#                    size_hint:(None,None)
-#                    center_x: self.parent.center_x
-#                    center_y: self.parent.center_y
-#                    width: self.parent.width
-#                    height: self.parent.height
-#                    allow_stretch: True
-            Button:
-                size_hint: (.1,1)
-                text:'Stop'
-                on_release: root.StopPressed()
-            Button:
-                id: playPauseButton
-                size_hint: (.1,1)
-                text:'Play'
-                on_release: root.PlayPausePressed()
+    orientation:'vertical'
+    DrawableVideo:
+        id: videoplayer
+        size_hint: (1,.9)
+        on_touch_down: root.video_player_touch_down(args[1])
+        on_touch_move: root.video_player_move(args[1])
+        on_touch_up: root.video_player_touch_up(args[1])
+        on_position: root.video_position_changed(args[1])
+        on_duration: root.video_duration_changed(args[1])
+    Slider:
+        id: videoSlider
+        size_hint: (1,.1)
+        min: 0
+        disabled: True
+        on_touch_up: root.video_slider_released(args[1], self.value_normalized)
+        on_touch_down: root.video_slider_pressed(args[1])
+        sensitivity: 'handle'
+    StackLayout:
+        size_hint: (1,.1)
+
+<DrawableVideo>
+
 
 <YoLabelerScreen>:
+    orientation:'vertical'
     BoxLayout:
-        orientation:'horizontal'
+        size_hint: (1,.9)
         YoVideoPlayer:
-            size_hint: (.9,1)
+            size_hint: (.7,1)
             id: videoWidget
-        StackLayout:
+            add_bb: root.add_bb
+        RightControlPanel:
             id: rightControlPanel
-            size_hint: (.1,1)
-            Button:
-                size_hint: (1,.1)
-                text:'Settings'
-                on_release: root.settings()
-            Button:
-                size_hint: (1,.1)
-                text:'Save'
-                on_release: videoWidget.save()
-            Button:
-                orientation: 'rl-tb'
-                size_hint: (1,.1)
-                text:'Delete Label'
-                on_release: videoWidget.delete_label_clicked()
-            Button:
-                orientation: 'rl-tb'
-                size_hint: (1,.1)
-                text:'Clear Labels'
-                on_release: videoWidget.clear_labels()
-            ScrollView:
-                size_hint: (1,.6)
-                StackLayout:
-                    id: BBStackLayout
+            size_hint: (.3,1)
+            add_label: root.add_label
+            delete_label: root.delete_label
+    BottomControlPanel:
+        id: bottomControlPanel
+        size_hint: (1,.1)
+
+<BottomControlPanel>
+    Button:
+        size_hint: (.1,1)
+        text:'Load Movie'
+        on_release: root.LoadMovie()
+    Button:
+        size_hint: (.1,1)
+        text:'Stop'
+        on_release: root.StopPressed()
+    Button:
+        id: playPauseButton
+        size_hint: (.1,1)
+        text:'Play'
+        on_release: root.PlayPausePressed()
+
+<RightControlPanel>
+#    Button:
+#        size_hint: (1,.1)
+#        text:'Settings'
+#        on_release: root.settings()
+    orientation: 'rl-tb'
+    Button:
+        size_hint: (1,.1)
+        text:'Save'
+        on_release: videoWidget.save()
+    BoxLayout:
+        size_hint: (1, .1)
+        orientation:'horizontal'
+        TextInput:
+            id: labeltextinput
+            size_hint: (.8, 1)
+        Button:
+            size_hint: (.2, 1)
+            text: 'Add Label'
+            on_release: root.add_label(labeltextinput.text)
+    Button:
+        orientation: 'rl-tb'
+        size_hint: (1,.1)
+        text:'Delete Label'
+        on_release: root.delete_label_clicked(self)
+    Button:
+        orientation: 'rl-tb'
+        size_hint: (1,.1)
+        text:'Clear Labels'
+        on_release: videoWidget.clear_labels()
+    BoxLayout:
+        id: bbsStackLayout
+        orientation:'vertical'
+        size_hint: (1,.5)
+
+
+
+<bbEntryRightControlPanel>
+    orientation:'horizontal'
+    size_hint: (1,.1)
+    Label:
+        text: root.bbId
+        halign: 'left'
+        size: self.texture_size
+        padding: (10,10)
+        pos: root.pos
+    Button:
+        text: ""
+        on_release: root.assign_label_clicked(self)
 
 <LoadDialog>:
     BoxLayout:
@@ -102,9 +143,10 @@
                 size_hint: (.2, 1)
                 text: 'Add Label'
                 on_release: root.add_label(labeltextinput.text)
-        BoxLayout:
-            orientation: "vertical"
-            id: boxLayout
+        LabelDialogLabelsBox:
+            orientation:'lr-bt'
+            labels: root.labels
+            assign_label: root.assign_label_to_bb
         BoxLayout:
             size_hint: (1, .1)
             size_hint_y: None
@@ -113,20 +155,33 @@
                 text: "Cancel"
                 on_release: root.cancel()
 
+<LabelDialogLabelsBox>
+    StackLayout:
+        id:box
+        orientation:'lr-tb'
 
-
-<LabelDialogButtonsBox>:
+<LabelDialogLabelButtonsBox>:
     BoxLayout:
         orientation:'horizontal'
+        size_hint_y:0.1
         Button:
             text: root.label
             size_hint_y:None
-            on_release:root.assign(root.bb, self.text)
+            on_release: root.assign_label(self.text)
         Button:
-            text: 'delete'
-            size_hint_x: .1
+            text: 'Delete all BBs'
+            size_hint_x: .2
             size_hint_y:None
-            on_release:root.delete(root.label)
+            background_color: (.8,.8,.3,1)
+            background_normal : ''
+            on_release:root.delete_all_bb_of_label(root.label)
+        Button:
+            text: 'Delete Label'
+            size_hint_x: .2
+            size_hint_y:None
+            background_color: (1,0,0,1)
+            background_normal : ''
+            on_release:root.delete_label(root.label)
 
 <YoBBWidget>
     canvas.before:

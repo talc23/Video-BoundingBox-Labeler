@@ -6,8 +6,18 @@ from kivy import utils
 
 import random
 
+class BoundingBox():
+    def __init__(self, width, height, centerX, centerY, id):
+        self.width = width
+        self.height = height
+        self.centerX = centerX
+        self.centerY = centerY
+        self.id = id
+
+    def __str__(self):
+        return "BoundingBox({}, {}, {}, {}, {})".format(self.width, self.height, self.centerX, self.centerY, self.id)
+
 class YoBBWidget(Widget):
-    labelCount = 0
     linepoints = ListProperty()
     labelName = StringProperty()
     labelId = StringProperty()
@@ -16,11 +26,26 @@ class YoBBWidget(Widget):
 
     def __init__(self, **kwargs):
         super(YoBBWidget, self).__init__(**kwargs)
-        self.linepoints = []
+        self.linepoints = [0,0]
         self.labelName = ""
-        self.isUpdated = False
         self.groupColor = [1,1,1]
+        self.shapeSize = [0,0]
         # self.center
+
+    def to_string(self):
+        return "YoBBWidget(labelName={}, labelId={}).update(({},{}), ({},{}))"\
+            .format(self.labelName, self.labelId, self.linepoints[0], self.linepoints[1], self.shapeSize[0], self.shapeSize[1])
+
+    def update_bb(self, boundingBox: BoundingBox):
+        leftTop = [0, 0]
+        size = [0, 0]
+        size[0] = boundingBox.width * self.parent.size[0]
+        size[1] = boundingBox.height * self.parent.size[1]
+        leftTop[0] = boundingBox.centerX * self.parent.size[0] - size[0] / 2
+        leftTop[1] = boundingBox.centerY * self.parent.size[1] - size[1] / 2
+        self.labelId = str(boundingBox.id)
+        self.update(leftTop, size)
+
 
     def update(self, leftTop, size):
         self.linepoints = [leftTop[0], leftTop[1],
@@ -28,17 +53,13 @@ class YoBBWidget(Widget):
                        leftTop[0] + size[0], leftTop[1]+size[1],
                        leftTop[0], leftTop[1]+size[1],
                        leftTop[0], leftTop[1]]
+        self.shapeSize = size
         self.ids.labelname.pos = (self.linepoints[0], self.linepoints[1])
         self.ids.labelid.pos = (self.linepoints[6], self.linepoints[7])
         self._centerX = (float(leftTop[0]) + size[0] / 2) / self.parent.size[0]
         self._centerY = (float(leftTop[1]) + size[1] / 2) / self.parent.size[1]
         self._width   = float(size[0])/self.parent.size[0]
         self._height = float(size[1]) / self.parent.size[1]
-        print(self.get_yolo_repr())
-        if self.isUpdated is False:
-            YoBBWidget.labelCount+=1
-            self.labelId = str(self.labelCount)
-            self.isUpdated = True
 
     def set_name(self, name):
         self.labelName = name
@@ -83,10 +104,8 @@ class YoBBWidgetGroup():
         yoLabel.groupColor = [self.color.r, self.color.g, self.color.b]
         yoLabel.bbColor = self.bbcodeColor
         yoLabel.labelName = self.name
-        print(self.yoBBWidgets)
 
     def delete_yobbwidget(self, yoLabel :YoBBWidget):
-
         self.yoBBWidgets.remove(yoLabel)
 
     def is_empty(self):
