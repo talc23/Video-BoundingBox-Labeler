@@ -1,27 +1,56 @@
 from kivy.uix.boxlayout import BoxLayout
 from kivy.uix.popup import Popup
 from kivy.logger import Logger
-from Dialogs import LoadDialog, SaveDialog, LabelDialog
+from kivy.utils import get_color_from_hex
 from Video import DrawableVideo
+from Panels import BottomControlPanel
+from Dialogs import LoadDialog
 from kivy.uix.widget import Widget
 from copy import copy
 import cv2
-from kivy.properties import ObjectProperty, ListProperty
+from kivy.properties import ObjectProperty, ListProperty, DictProperty, StringProperty
+from Colors import colors
 
 
-from YoLabel import YoBBWidget, YoBBWidgetGroup
+from BoundingBox import YoBBWidget
 
 import os
 
 class YoVideoPlayer(BoxLayout):
     add_bb = ObjectProperty(None)
     bbs = ListProperty(None)
+    labelsColor = DictProperty(None)
+    videoSource = StringProperty("")
+    video_loaded = ObjectProperty(None)
+
     def __init__(self, **kwargs):
         super(YoVideoPlayer, self).__init__(**kwargs)
         self.activeLabel = None
         self.workingAreaPath = r'C:\Labeler'
         self.savedDataIndex = 0
         self.videoSliderPressed = False
+
+    def load_movie(self):
+        Logger.debug("Load Movie released")
+        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
+        self.activePopup = Popup(title='Choose file to load...', content=content,
+                                    size_hint=(0.9, 0.9))
+        self.activePopup.open()
+
+    def load(self, path, filename):
+        fullPath = os.path.join(path, filename[0])
+        self.videoSource = fullPath
+        # self.ids.videoplayer.state = 'play'
+        # self.ids.videoslider.disabled=False
+        self.dismiss_popup()
+
+    def dismiss_popup(self):
+        self.activePopup.dismiss()
+        self.activePopup = None
+
+    def video_loaded(self):
+        print('video_loaded')
+        self.ids.videoSlider.disabled = False
 
     def on_bbs(self, instance, value):
         self.ids.videoplayer.bbs = self.bbs
@@ -42,6 +71,7 @@ class YoVideoPlayer(BoxLayout):
                 self.currentLabelPivot = touch.pos
                 self.activeLabel = YoBBWidget()
                 videoWidget.add_widget(self.activeLabel)
+                self.activeLabel.bbColor=get_color_from_hex(colors.YELLOW)
 
     def video_player_move(self, touch):
         isLeftButton = False
@@ -106,47 +136,20 @@ class YoVideoPlayer(BoxLayout):
                 return
         self.videoSliderPressed = True
 
+    def video_state_changed(self, instance, value):
+        print('video_state_changed' + value)
+        self.video_state = value
 
-    def LoadMovie(self):
-        Logger.debug("Load Movie released")
-        content = LoadDialog(load=self.load, cancel=self.dismiss_popup)
-        self.activePopup = Popup(title='Choose file to load...', content=content,
-                                    size_hint=(0.9, 0.9))
-        self.activePopup.open()
 
-    def load(self, path, filename):
-        fullPath = os.path.join(path, filename[0])
-        self.ids.videoplayer.source = fullPath
-        # self.ids.videoplayer.state = 'play'
-        self.ids.videoslider.disabled=False
-        self.dismiss_popup()
-
-    def dismiss_popup(self):
-        self.activePopup.dismiss()
-        self.activePopup = None
-
-    def StopPressed(self):
-        self.ids.videoplayer.state = 'stop'
-
-    def PlayPausePressed(self):
-        if self.ids.videoplayer.state is 'play':
-            self.ids.videoplayer.state = 'pause'
-            self.ids.playPauseButton.text = 'play'
-        elif self.ids.videoplayer.state is 'pause' or self.ids.videoplayer.state is 'stop':
-            self.ids.videoplayer.state = 'play'
-            self.ids.playPauseButton.text = 'pause'
-
-    def save(self):
+    def save_screen(self):
         if self.ids.videoplayer.loaded:
             imageFileName = self.workingAreaPath + r'\image'+ str(self.savedDataIndex)+ '.png'
             bbFileName    = self.workingAreaPath + r'\image'+ str(self.savedDataIndex)+ '.txt'
             bbData = ''
             if self.ids.videoplayer.texture.save(imageFileName):
                 self.savedDataIndex += 1
-                for key in self.labelGroup.keys():
-                    bbList  = self.labelGroup[key].get_all_bbs()
-                    for bb in bbList:
-                        bbData += bb.get_yolo_repr() + '\n'
+                for bbWidget in self.ids.videoplayer.children:
+                   bbData += bbWidget.get_yolo_repr() + '\n'
                 if len(bbData) != 0:
                     bbFile = open(bbFileName, 'w')
                     bbFile.write(bbData)

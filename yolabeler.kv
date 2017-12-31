@@ -3,7 +3,11 @@
     orientation:'vertical'
     DrawableVideo:
         id: videoplayer
+        labelsColor: root.labelsColor
+        source: root.videoSource
+        video_loaded: root.video_loaded
         size_hint: (1,.9)
+        state: 'stop'
         on_touch_down: root.video_player_touch_down(args[1])
         on_touch_move: root.video_player_move(args[1])
         on_touch_up: root.video_player_touch_up(args[1])
@@ -17,7 +21,12 @@
         on_touch_up: root.video_slider_released(args[1], self.value_normalized)
         on_touch_down: root.video_slider_pressed(args[1])
         sensitivity: 'handle'
-    StackLayout:
+    BottomControlPanel:
+        load_movie: root.load_movie
+        play_pause_pressed: videoplayer.play_pause_pressed
+        stop_pressed: videoplayer.stop_pressed
+        video_state: videoplayer.state
+        id: bottomControlPanel
         size_hint: (1,.1)
 
 <DrawableVideo>
@@ -28,6 +37,7 @@
     BoxLayout:
         size_hint: (1,.9)
         YoVideoPlayer:
+            labelsColor: root.labelsColor
             size_hint: (.7,1)
             id: videoWidget
             add_bb: root.add_bb
@@ -36,24 +46,23 @@
             size_hint: (.3,1)
             add_label: root.add_label
             delete_label: root.delete_label
-    BottomControlPanel:
-        id: bottomControlPanel
-        size_hint: (1,.1)
+            assign_label: root.assign_label
+            save_screen:  videoWidget.save_screen
 
 <BottomControlPanel>
     Button:
-        size_hint: (.1,1)
+        size_hint: (.2,1)
         text:'Load Movie'
-        on_release: root.LoadMovie()
+        on_release: root.load_movie()
     Button:
-        size_hint: (.1,1)
+        size_hint: (.2,1)
         text:'Stop'
-        on_release: root.StopPressed()
+        on_release: root.stop_pressed()
     Button:
         id: playPauseButton
-        size_hint: (.1,1)
+        size_hint: (.2,1)
         text:'Play'
-        on_release: root.PlayPausePressed()
+        on_release: root.play_pause_pressed()
 
 <RightControlPanel>
 #    Button:
@@ -64,7 +73,7 @@
     Button:
         size_hint: (1,.1)
         text:'Save'
-        on_release: videoWidget.save()
+        on_release: root.save_screen()
     BoxLayout:
         size_hint: (1, .1)
         orientation:'horizontal'
@@ -102,7 +111,7 @@
         padding: (10,10)
         pos: root.pos
     Button:
-        text: ""
+        text: root.bbLabel
         on_release: root.assign_label_clicked(self)
 
 <LoadDialog>:
@@ -186,14 +195,14 @@
 <YoBBWidget>
     canvas.before:
         Color:
-            rgb: (self.groupColor[0], self.groupColor[1], self.groupColor[2])
+            rgb: (self.bbColor[0], self.bbColor[1], self.bbColor[2])
         Line:
             points: self.linepoints
             width:3
             joint: 'round'
     Label:
         id: labelname
-        text: '[size=24][color=' + root.bbColor + ']' +root.labelName + '[/color][/size]'
+        text: '[size=24][color=' + root.bbColorHex + ']' +root.labelName + '[/color][/size]'
         markup:True
         halign: 'left'
         valign: 'bottom'
@@ -202,7 +211,7 @@
         pos: root.pos
     Label:
         id: labelid
-        text: '[size=24][color=' + root.bbColor + ']' +root.labelId + '[/color][/size]'
+        text: '[size=24][color=' + root.bbColorHex + ']' +root.labelId + '[/color][/size]'
         markup :True
         halign: 'left'
         valign: 'top'
