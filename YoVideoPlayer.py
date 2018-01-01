@@ -4,10 +4,7 @@ from kivy.logger import Logger
 from kivy.utils import get_color_from_hex
 from Video import DrawableVideo
 from Panels import BottomControlPanel
-from Dialogs import LoadDialog
 from kivy.uix.widget import Widget
-from copy import copy
-import cv2
 from kivy.properties import ObjectProperty, ListProperty, DictProperty, StringProperty
 from Colors import colors
 
@@ -154,55 +151,3 @@ class YoVideoPlayer(BoxLayout):
                     bbFile = open(bbFileName, 'w')
                     bbFile.write(bbData)
                     bbFile.close()
-
-
-    def clear_labels(self):
-        Logger.debug('clear_labels pressed')
-        videoWidget = self.ids.videoplayer
-        for key in self.labelGroup.keys():
-            while self.labelGroup[key].is_empty() is False:
-                label = self.labelGroup[key].get_next_bb()
-                self.labelGroup[key].delete_yobbwidget(label)
-                videoWidget.remove_widget(label)
-
-    def add_label(self, newLabel):
-        if newLabel is not "":
-            if newLabel not in self.labelGroup.keys():
-                newGroup = YoBBWidgetGroup(newLabel)
-                self.labelGroup[newLabel] = newGroup
-                self.activePopup.content.labels = self.labelGroup.keys()
-            else:
-                print(newLabel + 'is already defined')
-
-    def assign_label(self, bb: YoBBWidget, labelName):
-        if labelName not in self.labelGroup.keys():
-            return
-        else:
-            self.labelGroup[bb.labelName].delete_yobbwidget(bb)
-            self.labelGroup[labelName].add_yobbwidget(bb)
-            bb.labelName = labelName
-            self.dismiss_popup()
-
-    def delete_label(self, labelName):
-        if labelName is 'Undefined':
-            return
-        if labelName not in self.labelGroup.keys():
-            return
-        else:
-            videoWidget = self.ids.videoplayer
-            while self.labelGroup[labelName].is_empty() is False:
-                label = self.labelGroup[labelName].get_next_bb()
-                self.labelGroup[labelName].delete_yobbwidget(label)
-                videoWidget.remove_widget(label)
-            self.labelGroup.pop(labelName)
-            self.activePopup.content.update_labels(self.labelGroup.keys())
-
-    def delete_all_bb_of_label(self, labelName):
-        if labelName not in self.labelGroup.keys():
-            return
-        else:
-            videoWidget = self.ids.videoplayer
-            while self.labelGroup[labelName].is_empty() is False:
-                label = self.labelGroup[labelName].get_next_bb()
-                self.labelGroup[labelName].delete_yobbwidget(label)
-                videoWidget.remove_widget(label)

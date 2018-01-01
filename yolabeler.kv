@@ -37,9 +37,9 @@
     BoxLayout:
         size_hint: (1,.9)
         YoVideoPlayer:
+            id: videoWidget
             labelsColor: root.labelsColor
             size_hint: (.7,1)
-            id: videoWidget
             add_bb: root.add_bb
         RightControlPanel:
             id: rightControlPanel
@@ -48,6 +48,8 @@
             delete_label: root.delete_label
             assign_label: root.assign_label
             save_screen:  videoWidget.save_screen
+            clear_screen: root.delete_all_bbs
+            delete_bb: root.delete_bb
 
 <BottomControlPanel>
     Button:
@@ -79,21 +81,20 @@
         orientation:'horizontal'
         TextInput:
             id: labeltextinput
-            size_hint: (.8, 1)
+            size_hint: (.7, 1)
         Button:
-            size_hint: (.2, 1)
+            size_hint: (.3, 1)
             text: 'Add Label'
             on_release: root.add_label(labeltextinput.text)
     Button:
-        orientation: 'rl-tb'
-        size_hint: (1,.1)
-        text:'Delete Label'
+        size_hint: (1, .1)
+        text: 'Delete Label'
         on_release: root.delete_label_clicked(self)
     Button:
         orientation: 'rl-tb'
         size_hint: (1,.1)
-        text:'Clear Labels'
-        on_release: videoWidget.clear_labels()
+        text:'Clear Screen'
+        on_release: root.clear_screen()
     BoxLayout:
         id: bbsStackLayout
         orientation:'vertical'
@@ -110,6 +111,12 @@
         size: self.texture_size
         padding: (10,10)
         pos: root.pos
+    Button:
+        size_hint: (.2,1)
+        text: 'Del\nBB'
+        background_color: (1,0,0,1)
+        background_normal : ''
+        on_release: root.delete_bb(root.bb)
     Button:
         text: root.bbLabel
         on_release: root.assign_label_clicked(self)

@@ -9,28 +9,31 @@ from kivy.uix.dropdown import DropDown
 class RightControlPanel(StackLayout):
     labels = ListProperty(None)
     bbs = ListProperty(None)
-    delete_label = ObjectProperty(None)
+    delete_bb = ObjectProperty(None)
     add_label = ObjectProperty(None)
+    delete_label = ObjectProperty(None)
     assign_label = ObjectProperty(None)
     labelsColor = DictProperty(None)
     save_screen = ObjectProperty(None)
+    clear_screen = ObjectProperty(None)
+    delete_label_clicked = ObjectProperty(None)
 
     def __init__(self, **kwargs):
         super(RightControlPanel,self).__init__(**kwargs)
 
     def delete_label_clicked(self, inst):
-        dropdown = DropDown()
+        self.dropdown = DropDown()
         for label in self.labels:
             btn = Button(text=str(label),
                          size_hint_y=None,
                          height=40,
-                         background_color =  (.8, .8, .3, 1),
+                         background_color =  (1, 0, 0, 1),
                          background_normal= ''
                          )
-            btn.bind(on_release=lambda btn: self.delete_label_choosed(dropdown, btn.text))
-            dropdown.add_widget(btn)
-        dropdown.auto_dismiss = True
-        dropdown.open(inst)
+            btn.bind(on_release=lambda btn: self.delete_label_choosed(self.dropdown, btn.text))
+            self.dropdown.add_widget(btn)
+            self.dropdown.auto_dismiss = True
+        self.dropdown.open(inst)
 
     def on_labels(self, instance, value):
         if 'bbsStackLayout' not in self.ids:
@@ -39,7 +42,8 @@ class RightControlPanel(StackLayout):
         for bb in self.bbs:
             btn = bbEntryRightControlPanel(bb=bb,
                          labels = self.labels,
-                         assign_label=self.assign_label
+                         assign_label=self.assign_label,
+                         delete_bb=self.delete_bb
                          )
             self.ids.bbsStackLayout.add_widget(btn)
 
@@ -50,7 +54,8 @@ class RightControlPanel(StackLayout):
         for bb in self.bbs:
             btn = bbEntryRightControlPanel(bb=bb,
                          labels = self.labels,
-                         assign_label=self.assign_label
+                         assign_label=self.assign_label,
+                         delete_bb=self.delete_bb
                          )
             self.ids.bbsStackLayout.add_widget(btn)
 
@@ -59,9 +64,13 @@ class RightControlPanel(StackLayout):
         dropdown.dismiss()
 
 class bbEntryRightControlPanel(BoxLayout):
+
     bb = ObjectProperty(None)
     labels = ListProperty(None)
+
     assign_label = ObjectProperty(None)
+    delete_bb = ObjectProperty(None)
+
     bbId = StringProperty(None)
     bbLabel = StringProperty(None)
 
@@ -88,7 +97,7 @@ class bbEntryRightControlPanel(BoxLayout):
                          background_color =  (.8, .8, .3, 1),
                          background_normal= ''
                          )
-            btn.bind(on_release=lambda btn: self.assign_label_to_bb(btn, self.bb))
+            btn.bind(on_release=lambda btn: self.label_clicked(btn, self.bb))
             self.dropdown.add_widget(btn)
         self.dropdown.auto_dismiss = True
         self.dropdown.open(inst)
@@ -96,10 +105,11 @@ class bbEntryRightControlPanel(BoxLayout):
     def dropdown_dismissed(self, value):
         self.set_label_button_text()
 
-    def assign_label_to_bb(self, inst, bb):
+    def label_clicked(self, inst, bb):
         if self.dropdown:
             self.dropdown.dismiss()
             self.set_label_button_text()
+
         self.assign_label(bb, inst.text)
         self.bbLabel = str(self.bb.label)
 
@@ -112,7 +122,6 @@ class BottomControlPanel(StackLayout):
         super(BottomControlPanel,self).__init__(**kwargs)
 
     def on_video_state(self, instance, value):
-        print('BottomControlPanel- video state is' + str(value))
         if value is 'play':
             self.ids.playPauseButton.text = 'pause'
         else:
