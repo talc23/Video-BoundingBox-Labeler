@@ -1,10 +1,10 @@
 from kivy.graphics import Line, Point, Color
 from kivy.graphics.instructions import InstructionGroup
 from kivy.uix.widget import Widget
-from kivy.properties import StringProperty, ListProperty
+from kivy.properties import StringProperty, ListProperty, NumericProperty
 from kivy import utils
-
-import random
+import numpy
+# import random
 
 class BoundingBox():
     def __init__(self, width, height, centerX, centerY, id):
@@ -34,6 +34,15 @@ class YoBBWidget(Widget):
         self.labelName = ""
         self.shapeSize = [0,0]
         # self.center
+
+    def on_mouse_move(self, x, y, modifiers):
+        print('move')
+        leftTop = numpy.array((self.linepoints[0],self.linepoints[1]))
+        touchPoint = numpy.array((x,y))
+        dist = numpy.linalg.norm(leftTop-touchPoint)
+        print(dist)
+        if dist<5:
+            self.add_widget(CircleWidget(x=self.linepoints[0], y=self.linepoints[1]))
 
     def on_bbColor(self, instance, value):
         self.bbColorHex = utils.get_hex_from_color(self.bbColor)
@@ -86,10 +95,19 @@ class YoBBWidget(Widget):
         :return:
         '''
 
-        yoloRep = str(self.labelName) + " "\
-                + str(self._centerX) + " "\
+        yoloRep = ''
+        if self.labelName is '':
+            yoloRep = 'Undefined class'
+        else:
+            yoloRep = str(self.labelName) + " "
+        yoloRep += str(self._centerX) + " "\
                 + str(self._centerY) + " " \
                 + str(self._width) + " " \
                 + str(self._height)
 
         return yoloRep
+
+
+class CircleWidget():
+    x = NumericProperty(None)
+    y = NumericProperty(None)

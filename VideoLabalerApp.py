@@ -1,21 +1,16 @@
-from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.boxlayout import BoxLayout
 from kivy.app import App
-from kivy.properties import ObjectProperty, ListProperty, DictProperty, StringProperty
+from kivy.properties import ObjectProperty, ListProperty, \
+    DictProperty
 from kivy.core.window import Window
-from kivy.uix.popup import Popup
-from kivy.uix.videoplayer import VideoPlayer
-from kivy.logger import Logger
-import os
-from YoVideoPlayer import YoVideoPlayer
-from Panels import RightControlPanel
-from BoundingBox import BoundingBox
-from Colors import colors
-from kivy.config import Config
-import random
-Config.set('graphics', 'fullscreen', 'auto')
+from data.BoundingBox import BoundingBox
+from cfg.Colors import colors
 
-class YoLabelerScreen(BoxLayout):
+from kivy.logger import Logger
+
+
+class VideoLabelerScreen(BoxLayout):
+
     add_label = ObjectProperty(None)
     delete_label = ObjectProperty(None)
     add_bb = ObjectProperty(None)
@@ -29,7 +24,7 @@ class YoLabelerScreen(BoxLayout):
     availableColors = [colors.YELLOW, colors.BLUE, colors.GREEN, colors.PINK, colors.PURPLE]#, colors.WHITE]
 
     def __init__(self, **kwargs):
-        super(YoLabelerScreen, self).__init__(**kwargs)
+        super(VideoLabelerScreen, self).__init__(**kwargs)
         self.AvailableColorIdx = list(range(0, len(self.availableColors)))
 
     def on_bbs(self, instance, value):
@@ -44,11 +39,11 @@ class YoLabelerScreen(BoxLayout):
                     self.labelsColor[label] = self.availableColors[idx]
         self.ids.rightControlPanel.labels = self.labels
 
-class YoLabelerApp(App):
-
+class VideoLabalerApp(App):
     bbs = ListProperty(None)
+
     def __init__(self, **kwargs):
-        super(YoLabelerApp, self).__init__(**kwargs)
+        super(VideoLabalerApp, self).__init__(**kwargs)
         self.labels = {}
         # self.bbs  = []
         self.screen = None
@@ -56,15 +51,16 @@ class YoLabelerApp(App):
         self._keyboard = Window.request_keyboard(self._keyboard_closed, self.root)
         self._keyboard.bind(on_key_down=self._on_keyboard_down)
 
+
     def build(self):
-        self.screen = YoLabelerScreen(add_label=self.add_label,
-                                      delete_label=self.delete_label,
-                                      add_bb= self.add_bbWidget,
-                                      assign_label = self.assign_label,
-                                      delete_all_bbs = self.delete_all_bbs,
-                                      delete_bb = self.delete_bb,
-                                      bbs = self.bbs
-                                      )
+        self.screen = VideoLabelerScreen(add_label=self.add_label,
+                                         delete_label=self.delete_label,
+                                         add_bb= self.add_bbWidget,
+                                         assign_label = self.assign_label,
+                                         delete_all_bbs = self.delete_all_bbs,
+                                         delete_bb = self.delete_bb,
+                                         bbs = self.bbs,
+                                         )
         return self.screen
 
     def _keyboard_closed(self):
@@ -89,8 +85,13 @@ class YoLabelerApp(App):
             self.assign_label(bb, 'car')
             self.assign_label(bb3, 'person')
             self.assign_label(bb3, 'car')
+            self.screen.ids.videoWidget.videoSource = r'C:\bf1Movies\air.mp4'
+            self.screen.ids.videoWidget.video_slider_released(None, 0.3)
             # self._keyboard.unbind(on_key_down=self._on_keyboard_down)
             # self._keyboard = None
+        else:
+            Logger.debug('key pressed '+ str(keycode[1]))
+            return False
         return True
 
     def assign_label(self, bb, label):
@@ -139,7 +140,18 @@ class YoLabelerApp(App):
         self.screen.bbs = self.bbs
         self.bbCounter = 0
 
+    def build_config(self, config):
+        config.add_section('Settings')
+        config.set('Settings', 'Folder', r'C:\Labeler')
+
+    def build_settings(self, settings):
+        jsondataFile = open('cfg\config.json')
+        jsondata = jsondataFile.read()
+        settings.add_json_panel('Test application',
+            self.config, data=jsondata)
+
+
 if __name__ == '__main__':
-    yoLabelerApp = YoLabelerApp()
+    yoLabelerApp = VideoLabalerApp()
     yoLabelerApp.run()
 

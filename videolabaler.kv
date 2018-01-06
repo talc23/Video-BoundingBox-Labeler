@@ -1,23 +1,48 @@
-#:import VideoPlayer kivy.uix.videoplayer
-<YoVideoPlayer>
+#:import DrawableVideoPlayer widgets.DrawableVideoPlayer
+#:import ScreenControlPanel widgets.Panels.RightPanel.ScreenControlPanel
+#:import BottomControlPanel widgets.Panels.BottomPanel
+#:import DrawableVideo widgets.Video
+
+<VideoLabelerScreen>:
+    orientation:'vertical'
+    BoxLayout:
+        size_hint: (1,.9)
+        DrawableVideoPlayer:
+            id: videoWidget
+            labelsColor: root.labelsColor
+            size_hint: (.7,1)
+            add_bb: root.add_bb
+
+        ScreenControlPanel:
+            size_hint: (.3,1)
+            id: rightControlPanel
+
+            add_label: root.add_label
+            delete_label: root.delete_label
+            assign_label: root.assign_label
+            save_screen:  videoWidget.save_screen
+            clear_screen: root.delete_all_bbs
+            delete_bb: root.delete_bb
+            isVideoLoaded: videoWidget.isVideoLoaded
+
+
+<DrawableVideoPlayer>
     orientation:'vertical'
     DrawableVideo:
         id: videoplayer
-        labelsColor: root.labelsColor
         source: root.videoSource
-        video_loaded: root.video_loaded
         size_hint: (1,.9)
         state: 'stop'
-        on_touch_down: root.video_player_touch_down(args[1])
-        on_touch_move: root.video_player_move(args[1])
-        on_touch_up: root.video_player_touch_up(args[1])
-        on_position: root.video_position_changed(args[1])
+        video_loaded: root.video_loaded
         on_duration: root.video_duration_changed(args[1])
+        labelsColor: root.labelsColor
+        add_bb: root.add_bb
+
     Slider:
         id: videoSlider
         size_hint: (1,.1)
         min: 0
-        disabled: True
+        disabled: videoplayer.loaded == False
         on_touch_up: root.video_slider_released(args[1], self.value_normalized)
         on_touch_down: root.video_slider_pressed(args[1])
         sensitivity: 'handle'
@@ -30,26 +55,6 @@
         size_hint: (1,.1)
 
 <DrawableVideo>
-
-
-<YoLabelerScreen>:
-    orientation:'vertical'
-    BoxLayout:
-        size_hint: (1,.9)
-        YoVideoPlayer:
-            id: videoWidget
-            labelsColor: root.labelsColor
-            size_hint: (.7,1)
-            add_bb: root.add_bb
-        RightControlPanel:
-            id: rightControlPanel
-            size_hint: (.3,1)
-            add_label: root.add_label
-            delete_label: root.delete_label
-            assign_label: root.assign_label
-            save_screen:  videoWidget.save_screen
-            clear_screen: root.delete_all_bbs
-            delete_bb: root.delete_bb
 
 <BottomControlPanel>
     Button:
@@ -66,16 +71,15 @@
         text:'Play'
         on_release: root.play_pause_pressed()
 
-<RightControlPanel>
+<ScreenControlPanel>
 #    Button:
 #        size_hint: (1,.1)
 #        text:'Settings'
 #        on_release: root.settings()
-    orientation: 'rl-tb'
     Button:
         size_hint: (1,.1)
-        text:'Save'
-        on_release: root.save_screen()
+        text:'Save Screen'
+        on_release: root.save_screen_clicked(self)
     BoxLayout:
         size_hint: (1, .1)
         orientation:'horizontal'
@@ -100,13 +104,11 @@
         orientation:'vertical'
         size_hint: (1,.5)
 
-
-
 <bbEntryRightControlPanel>
     orientation:'horizontal'
     size_hint: (1,.1)
     Label:
-        text: root.bbId
+        text: str(root.bb.id)
         halign: 'left'
         size: self.texture_size
         padding: (10,10)
@@ -120,6 +122,16 @@
     Button:
         text: root.bbLabel
         on_release: root.assign_label_clicked(self)
+
+<ConfirmBubble>
+    text:'Not all BBs are assigned to a label, save anyway?'
+    Button:
+        text:'Yes'
+        on_release: root.confirm(root, True)
+    Button:
+        text:'No'
+        on_release: root.confirm(root, False)
+
 
 <LoadDialog>:
     BoxLayout:
@@ -225,6 +237,15 @@
         size: self.texture_size
         padding: (10,10)
         pos: (root.pos[0], root.pos[1]+root.height)
+
+
+<CircleWidget>
+    canvas:
+        Color:
+            rgb: 1, 1, 1
+        Ellipse:
+            pos: x, y
+            size: 5, 5
 
 <LabelDropDown>:
 #    canvas:

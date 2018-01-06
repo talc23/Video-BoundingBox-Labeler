@@ -1,12 +1,11 @@
-from pickle import NONE
-
 from kivy.uix.stacklayout import StackLayout
 from kivy.uix.boxlayout import BoxLayout
-from kivy.properties import ObjectProperty, ListProperty, StringProperty, DictProperty, OptionProperty
+from kivy.properties import BooleanProperty, ObjectProperty, ListProperty, StringProperty, DictProperty
 from kivy.uix.button import Button
 from kivy.uix.dropdown import DropDown
 
-class RightControlPanel(StackLayout):
+
+class ScreenControlPanel(StackLayout):
     labels = ListProperty(None)
     bbs = ListProperty(None)
     delete_bb = ObjectProperty(None)
@@ -17,11 +16,15 @@ class RightControlPanel(StackLayout):
     save_screen = ObjectProperty(None)
     clear_screen = ObjectProperty(None)
     delete_label_clicked = ObjectProperty(None)
+    isAllBBsAssigned = BooleanProperty(False)
+    isVideoLoaded    = BooleanProperty(False)
 
     def __init__(self, **kwargs):
-        super(RightControlPanel,self).__init__(**kwargs)
+        super(ScreenControlPanel, self).__init__(**kwargs)
 
     def delete_label_clicked(self, inst):
+        if len(self.labels) is 0:
+            return
         self.dropdown = DropDown()
         for label in self.labels:
             btn = Button(text=str(label),
@@ -47,11 +50,28 @@ class RightControlPanel(StackLayout):
                          )
             self.ids.bbsStackLayout.add_widget(btn)
 
+    def save_screen_clicked(self, inst):
+        if self.isVideoLoaded is False:
+            return
+        # if self.isAllBBsAssigned is False:
+        #     self.confirmSaveBubble = ConfirmBubble(pos=[inst.pos[0], inst.pos[1]+inst.height], confirm=self.confirm_save)
+        #     inst.add_widget(self.confirmSaveBubble)
+        # else:
+        self.save_screen()
+
+    def confirm_save(self, inst, confirm):
+        if confirm:
+            self.save_screen()
+        inst.parent.remove_widget(inst)
+
     def on_bbs(self, instance, value):
         if 'bbsStackLayout' not in self.ids:
             return
         self.ids.bbsStackLayout.clear_widgets()
+        self.isAllBBsAssigned = True
         for bb in self.bbs:
+            if bb.label is None or bb.label is "":
+                self.isAllBBsAssigned = False
             btn = bbEntryRightControlPanel(bb=bb,
                          labels = self.labels,
                          assign_label=self.assign_label,
@@ -84,7 +104,6 @@ class bbEntryRightControlPanel(BoxLayout):
             self.bbLabel = "Undefined Label"
 
     def on_bb(self, instance, value):
-        self.bbId = str(self.bb.id)
         self.set_label_button_text()
 
     def assign_label_clicked(self, inst):
@@ -112,17 +131,3 @@ class bbEntryRightControlPanel(BoxLayout):
 
         self.assign_label(bb, inst.text)
         self.bbLabel = str(self.bb.label)
-
-class BottomControlPanel(StackLayout):
-    load_movie = ObjectProperty(None)
-    play_pause_pressed = ObjectProperty(None)
-    stop_pressed = ObjectProperty(None)
-    video_state = StringProperty(None)
-    def __init__(self, **kwargs):
-        super(BottomControlPanel,self).__init__(**kwargs)
-
-    def on_video_state(self, instance, value):
-        if value is 'play':
-            self.ids.playPauseButton.text = 'pause'
-        else:
-            self.ids.playPauseButton.text = 'play'
