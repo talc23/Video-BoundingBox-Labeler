@@ -127,10 +127,12 @@ class VideoLabalerApp(App):
             if delLabel in self.labels.keys():
                 print(delLabel + ' deleted')
                 self.labels.pop(delLabel)
+                self.screen.labels = []
                 self.screen.labels = self.labels.keys()
                 for bb in self.bbs:
                     if bb.label is delLabel:
                         bb.label = ""
+                self.screen.bbs = []
                 self.screen.bbs = self.bbs
             else:
                 print(delLabel + 'is not defined')
