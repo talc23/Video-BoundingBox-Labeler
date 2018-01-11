@@ -37,7 +37,6 @@
         on_duration: root.video_duration_changed(args[1])
         labelsColor: root.labelsColor
         add_bb: root.add_bb
-
     Slider:
         id: videoSlider
         size_hint: (1,.1)
@@ -149,67 +148,7 @@
                 on_release: root.cancel()
             Button:
                 text: "Load"
-                on_release: root.load(filechooser.path, filechooser.selection)
-
-<LabelDialog>:
-    BoxLayout:
-        orientation:'vertical'
-        width: root.width/2
-        height: root.height
-        pos: root.pos
-        Label:
-            size_hint: (1, .1)
-            text: 'choose label for BB id:' + root.bb.labelId
-
-        BoxLayout:
-            size_hint: (1, .1)
-            orientation:'horizontal'
-            TextInput:
-                id: labeltextinput
-                size_hint: (.8, 1)
-            Button:
-                size_hint: (.2, 1)
-                text: 'Add Label'
-                on_release: root.add_label(labeltextinput.text)
-        LabelDialogLabelsBox:
-            orientation:'lr-bt'
-            labels: root.labels
-            assign_label: root.assign_label_to_bb
-        BoxLayout:
-            size_hint: (1, .1)
-            size_hint_y: None
-            height: 30
-            Button:
-                text: "Cancel"
-                on_release: root.cancel()
-
-<LabelDialogLabelsBox>
-    StackLayout:
-        id:box
-        orientation:'lr-tb'
-
-<LabelDialogLabelButtonsBox>:
-    BoxLayout:
-        orientation:'horizontal'
-        size_hint_y:0.1
-        Button:
-            text: root.label
-            size_hint_y:None
-            on_release: root.assign_label(self.text)
-        Button:
-            text: 'Delete all BBs'
-            size_hint_x: .2
-            size_hint_y:None
-            background_color: (.8,.8,.3,1)
-            background_normal : ''
-            on_release:root.delete_all_bb_of_label(root.label)
-        Button:
-            text: 'Delete Label'
-            size_hint_x: .2
-            size_hint_y:None
-            background_color: (1,0,0,1)
-            background_normal : ''
-            on_release:root.delete_label(root.label)
+                on_release: root.load_clicked(filechooser.path, filechooser.selection)
 
 <YoBBWidget>
     canvas.before:
@@ -219,6 +158,9 @@
             points: self.linepoints
             width:3
             joint: 'round'
+#        Ellipse:
+#            pos: [self._centerX,self._centerY]
+
     Label:
         id: labelname
         text: '[size=24][color=' + root.bbColorHex + ']' +root.labelName + '[/color][/size]'
@@ -246,27 +188,3 @@
         Ellipse:
             pos: x, y
             size: 5, 5
-
-<LabelDropDown>:
-#    canvas:
-#        Rectangle:
-#            pos: (root.pos[0],root.pos[1])
-#            size:( root.pos[0]+root.size[0], root.pos[1]+root.size[1])
-    width:200
-    on_dismiss: root.dismissed()
-    BoxLayout:
-        id: labelDropDownBoxLayout
-        height:50
-        size_hint: (1, None)
-        TextInput:
-            id: labeltextinput
-            size_hint: (.8, 1)
-        Button:
-            size_hint: (.2, 1)
-            text: 'Add Label'
-            on_release: root.add_label(labeltextinput.text)
-
-<LabelDropDownButton>:
-    size_hint_y:None
-    height:50
-    on_release:root.released(self.text)

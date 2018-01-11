@@ -39,6 +39,9 @@ class VideoLabelerScreen(BoxLayout):
                     self.labelsColor[label] = self.availableColors[idx]
         self.ids.rightControlPanel.labels = self.labels
 
+    def load_movie(self, filename):
+        self.ids.videoWidget.load(filename)
+
 class VideoLabalerApp(App):
     bbs = ListProperty(None)
 
@@ -73,7 +76,7 @@ class VideoLabalerApp(App):
             self.delete_all_bbs()
             self.add_label('car')
             self.add_label('person')
-            bb = BoundingBox(0.35535714285714287, 0.32592592592592595, 0.44375, 1.0094650205761317, 0)
+            bb = BoundingBox(0.35535714285714287, 0.32592592592592595, 0.30375, 0.0994650205761317, 0)
             self.add_bb(bb)
             bb2 = BoundingBox(0.12857142857142848, 0.28971193415637864, 0.8089285714285714, 0.7559670781893005, 1)
             self.add_bb(bb2)
@@ -106,6 +109,7 @@ class VideoLabalerApp(App):
             self.add_bb(bb)
 
     def add_bb(self, bb):
+        print(str(bb))
         self.bbs.append(bb)
         self.bbCounter+=1
         self.screen.bbs = self.bbs

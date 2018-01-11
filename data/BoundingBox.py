@@ -27,6 +27,8 @@ class YoBBWidget(Widget):
     labelId = StringProperty()
     bbColor = ListProperty([1,1,1])
     bbColorHex = StringProperty()
+    _centerX = NumericProperty(0)
+    _centerY = NumericProperty(0)
 
     def __init__(self, **kwargs):
         super(YoBBWidget, self).__init__(**kwargs)
@@ -36,7 +38,6 @@ class YoBBWidget(Widget):
         # self.center
 
     def on_mouse_move(self, x, y, modifiers):
-        print('move')
         leftTop = numpy.array((self.linepoints[0],self.linepoints[1]))
         touchPoint = numpy.array((x,y))
         dist = numpy.linalg.norm(leftTop-touchPoint)
@@ -57,25 +58,27 @@ class YoBBWidget(Widget):
         size = [0, 0]
         size[0] = boundingBox.width * self.parent.size[0]
         size[1] = boundingBox.height * self.parent.size[1]
-        leftTop[0] = boundingBox.centerX * self.parent.size[0] - size[0] / 2
-        leftTop[1] = boundingBox.centerY * self.parent.size[1] - size[1] / 2
+        leftTop[0] = boundingBox.centerX * self.parent.size[0] - size[0] / 2 + self.parent.pos[0]
+        leftTop[1] = boundingBox.centerY * self.parent.size[1] + size[1] / 2 + self.parent.pos[1]
         self.labelId = str(boundingBox.id)
         self.update(leftTop, size)
-
 
     def update(self, leftTop, size):
         self.linepoints = [leftTop[0], leftTop[1],
                        leftTop[0]+size[0], leftTop[1],
-                       leftTop[0] + size[0], leftTop[1]+size[1],
-                       leftTop[0], leftTop[1]+size[1],
+                       leftTop[0] + size[0], leftTop[1]-size[1],
+                       leftTop[0], leftTop[1]-size[1],
                        leftTop[0], leftTop[1]]
         self.shapeSize = size
         self.ids.labelname.pos = (self.linepoints[0], self.linepoints[1])
         self.ids.labelid.pos = (self.linepoints[6], self.linepoints[7])
-        self._centerX = (float(leftTop[0]) + size[0] / 2) / self.parent.size[0]
-        self._centerY = (float(leftTop[1]) + size[1] / 2) / self.parent.size[1]
+        self._centerX = (float(leftTop[0]) + float(size[0]) / 2 - self.parent.pos[0]) / self.parent.size[0]
+        self._centerY = (float(leftTop[1]) - float(size[1]) / 2 - self.parent.pos[1]) / self.parent.size[1]
         self._width   = float(size[0])/self.parent.size[0]
         self._height = float(size[1]) / self.parent.size[1]
+        #
+
+
 
     def set_name(self, name):
         self.labelName = name
