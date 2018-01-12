@@ -80,8 +80,8 @@ class DrawableVideoPlayer(BoxLayout):
             bbData = ''
             if self.ids.videoplayer.texture.save(imageFileName):
                 self.savedDataIndex += 1
-                for bbWidget in self.ids.videoplayer.children:
-                   bbData += bbWidget.get_yolo_repr() + '\n'
+                for bb in self.bbs:
+                   bbData += bb.get_yolo_repr() + '\n'
                 if len(bbData) != 0:
                     bbFile = open(bbFileName, 'w')
                     bbFile.write(bbData)

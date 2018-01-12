@@ -22,7 +22,12 @@ class ScreenControlPanel(StackLayout):
     def __init__(self, **kwargs):
         super(ScreenControlPanel, self).__init__(**kwargs)
 
-    def delete_label_clicked(self, inst):
+    def _delete_label_clicked(self, inst):
+        '''
+        activates when a boundingbox label is clicked
+        :param inst:
+        :return:
+        '''
         if len(self.labels) is 0:
             return
         self.dropdown = DropDown()
@@ -53,10 +58,6 @@ class ScreenControlPanel(StackLayout):
     def save_screen_clicked(self, inst):
         if self.isVideoLoaded is False:
             return
-        # if self.isAllBBsAssigned is False:
-        #     self.confirmSaveBubble = ConfirmBubble(pos=[inst.pos[0], inst.pos[1]+inst.height], confirm=self.confirm_save)
-        #     inst.add_widget(self.confirmSaveBubble)
-        # else:
         self.save_screen()
 
     def confirm_save(self, inst, confirm):
@@ -72,11 +73,12 @@ class ScreenControlPanel(StackLayout):
         for bb in self.bbs:
             if bb.label is None or bb.label is "":
                 self.isAllBBsAssigned = False
-            btn = bbEntryRightControlPanel(bb=bb,
-                         labels = self.labels,
-                         assign_label=self.assign_label,
-                         delete_bb=self.delete_bb
-                         )
+            btn = bbEntryRightControlPanel(size_hint=(1,.1),
+                                           bb=bb,
+                                           labels = self.labels,
+                                           assign_label=self.assign_label,
+                                           delete_bb=self.delete_bb
+                                            )
             self.ids.bbsStackLayout.add_widget(btn)
 
     def delete_label_choosed(self, dropdown,  labelName):

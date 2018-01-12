@@ -92,7 +92,7 @@
     Button:
         size_hint: (1, .1)
         text: 'Delete Label'
-        on_release: root.delete_label_clicked(self)
+        on_release: root._delete_label_clicked(self)
     Button:
         orientation: 'rl-tb'
         size_hint: (1,.1)
@@ -150,7 +150,7 @@
                 text: "Load"
                 on_release: root.load_clicked(filechooser.path, filechooser.selection)
 
-<YoBBWidget>
+<BoundingBoxWidget>
     canvas.before:
         Color:
             rgb: (self.bbColor[0], self.bbColor[1], self.bbColor[2])

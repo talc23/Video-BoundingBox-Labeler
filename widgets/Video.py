@@ -1,6 +1,7 @@
 from kivy.uix.video import Video
 from kivy.properties import ListProperty, DictProperty, ObjectProperty
-from data.BoundingBox import YoBBWidget
+from widgets.BoundingBoxWidget import BoundingBoxWidget
+
 from kivy.clock import Clock
 from kivy.utils import get_color_from_hex
 from kivy.uix.widget import Widget
@@ -52,7 +53,7 @@ class DrawableVideo(Video):
         # print(str(self.size))
         self.textureWidget.clear_widgets()
         for bb in self.bbs:
-            bbWidget = YoBBWidget(labelName="")
+            bbWidget = BoundingBoxWidget(labelName="")
             self.textureWidget.add_widget(bbWidget)
             bbWidget.update_bb(bb)
             bbWidget.set_name(bb.label)
@@ -64,7 +65,7 @@ class DrawableVideo(Video):
     def on_labelsColor(self, instance, value):
         self.textureWidget.clear_widgets()
         for bb in self.bbs:
-            bbWidget = YoBBWidget(labelName="")
+            bbWidget = BoundingBoxWidget(labelName="")
             self.textureWidget.add_widget(bbWidget)
             bbWidget.update_bb(bb)
             bbWidget.set_name(bb.label)
@@ -103,7 +104,7 @@ class DrawableVideo(Video):
             if isLeftButton:
                 self.currentLabelLeftTop = touch.pos
                 self.currentLabelPivot = touch.pos
-                self.activeLabel = YoBBWidget()
+                self.activeLabel = BoundingBoxWidget()
                 self.textureWidget.add_widget(self.activeLabel)
                 self.activeLabel.bbColor=get_color_from_hex(colors.YELLOW)
 
